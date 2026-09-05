@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,13 +21,33 @@ def _ensure_store() -> dict[str, Any]:
 
 
 def _write_store(payload: dict[str, Any]) -> None:
+    """Writes the store 0600. It holds a live Plaid access token, which is a
+    bearer credential for someone's bank account -- it should not be readable
+    by other accounts on the machine. Created restricted rather than chmod'd
+    afterwards, so there is no window where the file exists world-readable."""
     STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    STORE_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    fd = os.open(STORE_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2)
 
 
 def store_access_token(access_token: str) -> None:
+    """Stores the token as issued.
+
+    This used to store sha256(access_token), which reads like a precaution and
+    was in fact a bug: get_access_token() hands its return value straight to
+    the Plaid API as the access token, so a digest could never authenticate
+    anything -- /plaid/transactions was guaranteed to fail against real Plaid.
+    A hash is the right shape for something you only ever compare; this is
+    something the app has to *present*, so it has to survive the round trip.
+
+    Confidentiality therefore comes from where it is kept, not from a one-way
+    function it cannot use: 0600 in _write_store, and store.json is
+    gitignored. Encryption at rest would need a key this app has nowhere to
+    put yet -- that belongs with real per-user accounts (see app.py's note on
+    the single shared token)."""
     payload = _ensure_store()
-    payload["access_token"] = hashlib.sha256(access_token.encode("utf-8")).hexdigest()
+    payload["access_token"] = access_token
     _write_store(payload)
 
 

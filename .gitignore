@@ -11,3 +11,12 @@ frontend/dist/
 frontend/node_modules/
 frontend/tsconfig*.tsbuildinfo
 .DS_Store
+
+# Dependencies are resolved from package-lock.json; committing the tree adds
+# ~9.5k files and drags every transitive package into git history. The rule
+# above only covered frontend/, but the committed copy is this one at the root.
+node_modules/
+
+# Holds a live Plaid access token -- a bearer credential for a real
+# bank account. Never commit it.
+plaid_integration/store.json
