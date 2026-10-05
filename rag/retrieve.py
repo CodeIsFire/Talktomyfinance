@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX_PATH = ROOT / "rag" / "kb_index.json"
@@ -22,6 +21,11 @@ def _load_index() -> list[dict[str, Any]]:
 def retrieve(query: str, top_k: int = 3) -> list[dict[str, Any]]:
     docs = _load_index()
     if not docs:
+        return []
+
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ModuleNotFoundError:
         return []
 
     model = SentenceTransformer(MODEL_NAME)

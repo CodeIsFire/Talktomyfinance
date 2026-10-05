@@ -44,8 +44,39 @@ The project uses the following environment variables:
 - PLAID_SECRET
 - PLAID_ENV
 - DATA_SOURCE
+- CORS_ALLOWED_ORIGINS (comma-separated list, optional)
 
 See [.env.example](.env.example) for the expected shape.
+
+## Vercel deployment
+
+This repository is configured for Vercel with:
+
+- static frontend build from `frontend/` (`npm run build`, output `frontend/dist`)
+- Python serverless API function at `api/index.py` (imports FastAPI `app` from `app.py`)
+- routing:
+  - `/api/*` -> FastAPI backend
+  - `/health` -> FastAPI backend
+  - all other routes -> frontend SPA (`index.html`)
+
+### Vercel project settings
+
+- Framework Preset: **Other**
+- Root Directory: repository root (do not set to `frontend`)
+- Build and Output settings: managed by `vercel.json`
+
+### Required environment variables
+
+- `GROQ_API_KEY` (required for LLM responses; app falls back to deterministic local responses when missing)
+
+### Optional environment variables
+
+- `GROQ_MODEL` (default: `llama-3.1-8b-instant`)
+- `DATA_SOURCE` (`mock` by default; set `plaid` only when Plaid tokens are configured)
+- `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV` (only needed for Plaid endpoints)
+- `CORS_ALLOWED_ORIGINS` (comma-separated production origins, for example `https://project-6apdz.vercel.app`)
+
+`/health` and mock-data operation do not require Plaid credentials.
 
 ## Plaid sandbox setup
 
