@@ -1,6 +1,6 @@
 # AI Finance Voice Assistant
 
-A voice-ready finance assistant that combines a multi-agent backend, retrieval-grounded answers, and a lightweight React frontend. The project is designed as a demo-friendly portfolio system for finance queries such as spending summaries, subscription analysis, and account-linking workflows.
+A voice-ready finance assistant that combines a multi-agent backend, retrieval-grounded answers, and a lightweight React frontend. The project is designed as a demo-friendly portfolio system for finance queries such as spending summaries, subscription analysis, and account-linking workflows
 
 ## What it does
 
