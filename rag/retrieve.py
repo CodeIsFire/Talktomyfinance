@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,22 @@ def retrieve(query: str, top_k: int = 3) -> list[dict[str, Any]]:
     try:
         from sentence_transformers import SentenceTransformer
     except ModuleNotFoundError:
-        return []
+        query_tokens = {token for token in re.findall(r"[a-zA-Z]+", query.lower()) if len(token) > 2}
+        if not query_tokens:
+            return docs[:top_k]
+
+        scored: list[tuple[float, dict[str, Any]]] = []
+        for doc in docs:
+            text_tokens = set(re.findall(r"[a-zA-Z]+", doc.get("text", "").lower()))
+            overlap = len(query_tokens & text_tokens)
+            if overlap > 0:
+                scored.append((float(overlap), doc))
+
+        if not scored:
+            return docs[:top_k]
+
+        scored.sort(key=lambda item: item[0], reverse=True)
+        return [doc for _, doc in scored[:top_k]]
 
     model = SentenceTransformer(MODEL_NAME)
     query_embedding = model.encode([query], convert_to_numpy=True)[0]
