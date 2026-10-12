@@ -18,12 +18,6 @@ def to_natural_language(summary_dict: dict[str, Any], query: str | None = None) 
     api_key = os.getenv("GROQ_API_KEY")
     model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
-    if not api_key:
-        return (
-            f"You spent ${summary_dict.get('total_spend', 0):.2f} across "
-            f"{summary_dict.get('transaction_count', 0)} transactions."
-        )
-
     kb_context = ""
     if query:
         kb_chunks = retrieve(query, top_k=3)
@@ -32,6 +26,13 @@ def to_natural_language(summary_dict: dict[str, Any], query: str | None = None) 
                 f"- {chunk['source']}: {chunk['text'][:600]}"
                 for chunk in kb_chunks
             )
+
+    if not api_key:
+        kb_note = " Grounded in local KB context." if kb_context else ""
+        return (
+            f"You spent ${summary_dict.get('total_spend', 0):.2f} across "
+            f"{summary_dict.get('transaction_count', 0)} transactions.{kb_note}"
+        )
 
     prompt = (
         "You are a concise finance assistant. Turn the following summary into a short voice-friendly response. "
@@ -55,7 +56,7 @@ def to_natural_language(summary_dict: dict[str, Any], query: str | None = None) 
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": "Bearer " + api_key,
                 "Content-Type": "application/json",
             },
             json=payload,

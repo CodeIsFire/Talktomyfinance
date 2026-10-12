@@ -12,6 +12,18 @@ from plaid_integration.service import get_synced_transactions
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "transactions.csv"
 DATA_SOURCE = os.getenv("DATA_SOURCE", "mock")
+FALLBACK_TRANSACTIONS = [
+    {"transaction_id": "TXN-001", "date": "2026-09-18", "description": "Monthly streaming plan", "amount": 14.99, "category": "Subscriptions", "merchant": "Netflix"},
+    {"transaction_id": "TXN-002", "date": "2026-09-20", "description": "Morning coffee", "amount": 8.75, "category": "Dining", "merchant": "Starbucks"},
+    {"transaction_id": "TXN-003", "date": "2026-09-07", "description": "Grocery restock", "amount": 92.40, "category": "Groceries", "merchant": "Whole Foods"},
+    {"transaction_id": "TXN-004", "date": "2026-08-28", "description": "Music service renewal", "amount": 10.99, "category": "Subscriptions", "merchant": "Spotify"},
+    {"transaction_id": "TXN-005", "date": "2026-08-15", "description": "Utility payment", "amount": 68.10, "category": "Utilities", "merchant": "City Water"},
+    {"transaction_id": "TXN-006", "date": "2026-07-22", "description": "Rideshare commute", "amount": 24.35, "category": "Transportation", "merchant": "Uber"},
+    {"transaction_id": "TXN-007", "date": "2026-06-05", "description": "Pharmacy order", "amount": 36.22, "category": "Health", "merchant": "CVS"},
+    {"transaction_id": "TXN-008", "date": "2026-05-12", "description": "Online household items", "amount": 57.89, "category": "Shopping", "merchant": "Amazon"},
+    {"transaction_id": "TXN-009", "date": "2026-04-20", "description": "Monthly rent", "amount": 1450.00, "category": "Housing", "merchant": "Landlord"},
+    {"transaction_id": "TXN-010", "date": "2026-03-15", "description": "Payroll deposit", "amount": 3200.00, "category": "Income", "merchant": "Payroll"},
+]
 
 STOP_WORDS = {
     "a",
@@ -61,7 +73,10 @@ def _load_dataframe() -> pd.DataFrame:
             frame["date"] = pd.to_datetime(frame["date"])
             return frame
 
-    frame = pd.read_csv(DATA_PATH)
+    if DATA_PATH.exists():
+        frame = pd.read_csv(DATA_PATH)
+    else:
+        frame = pd.DataFrame(FALLBACK_TRANSACTIONS)
     frame["date"] = pd.to_datetime(frame["date"])
     return frame
 
@@ -149,8 +164,10 @@ def get_transactions(query: str) -> list[dict[str, Any]]:
     if combined_mask.any():
         filtered = frame.loc[combined_mask].copy()
         filtered = filtered.sort_values("date", ascending=False)
+        filtered["date"] = filtered["date"].dt.strftime("%Y-%m-%d")
         return filtered.to_dict(orient="records")
 
     filtered = frame.loc[date_mask].copy()
     filtered = filtered.sort_values("date", ascending=False)
+    filtered["date"] = filtered["date"].dt.strftime("%Y-%m-%d")
     return filtered.to_dict(orient="records")

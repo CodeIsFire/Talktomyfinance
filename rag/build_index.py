@@ -27,5 +27,5 @@ def build_index() -> list[dict[str, Any]]:
 
 
 if __name__ == "__main__":
-    build_index()
-    print(f"Built index with {len(build_index())} documents")
+    docs = build_index()
+    print(f"Built index with {len(docs)} documents")
